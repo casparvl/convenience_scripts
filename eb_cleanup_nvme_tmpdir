@@ -1,0 +1,15 @@
+#!/bin/bash
+
+for i in {a..z}
+do
+    rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/eb-${i}* &
+    rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/included-easyblocks-${i}* &
+done
+for i in {0..9}
+do
+    rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/eb-${i}* &
+    rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/included-easyblocks-${i}* &
+done
+rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/eb-_* &
+rm -rf /gpfs/nvme1/1/casparl/ebtmpdir/included-easyblocks-_ &
+wait

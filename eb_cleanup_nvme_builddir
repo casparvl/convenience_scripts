@@ -1,0 +1,8 @@
+#!/bin/bash
+
+for i in /gpfs/nvme1/1/casparl/ebbuildpath/*
+do
+    rm -rf $i &
+done
+wait
+

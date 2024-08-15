@@ -1,0 +1,9 @@
+#!/bin/bash
+# Wrapper for squeue
+
+PATH=$(echo $PATH | sed -e "s;:\?$(dirname $0);;")
+
+# Check that we are now calling the 'real' sqeueu
+# which squeue
+
+squeue --format="%.10i %.9P %.25j %.8u %.8T %.10M %.9l %.6D %.10Q %.20S %R" "$@"

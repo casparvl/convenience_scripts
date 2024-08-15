@@ -1,0 +1,12 @@
+#!/bin/bash
+
+prio=3050302210
+jobid_string=$(sbatch $1)
+if [[ ${jobid_string} =~ [^0-9]*([0-9]*) ]]; then
+    jobid=${BASH_REMATCH[1]}
+else
+    echo "Error: jobid not found in \'${jobid_string}\'"
+fi
+
+echo "Submit job ${jobid} with priority ${prio}"
+sudo -u slurm_operator scontrol update job ${jobid} priority=${prio}

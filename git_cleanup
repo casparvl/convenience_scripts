@@ -1,0 +1,95 @@
+#!/bin/bash
+# Author: Caspar van Leeuwen (SURF)
+
+
+# name of the script withouth the path
+scriptname=$(basename $0)
+# path to the folder containing the script
+scriptdir=$(dirname $0)
+
+usage() {
+    echo -e "This script can be used to cleanup local and remote branches that have been merged."
+    echo -e "IT IS HIGHELY RECOMMENDED THAT YOU DO A DRY-RUN FIRST"
+    echo -e ""
+    echo -e "Usage: $0 [OPTIONS] --master main --remote origin
+
+    -m,--master        Name of the master branch. The script will delete branches that have been merged to this branch.            (mandatory)
+    -r,--remote        Name of the remote for which to cleanup the branches. The script will not touch branches on other remotes.  (mandatory)
+    NOTE: this SHOULD be your own remote, never someone elses! You don't want to remove branches from someone else...
+    -d,--dry-run       Perform dry-run                                                                                             (optional)
+    -h,--help          Help message
+
+Example usage:
+    git_cleanup --remote origin
+    "
+    exit 1;
+}
+
+longopts="master:,remote:,dry-run,help"
+shortopts="m:,r:,d,h"
+eval set -- $(getopt -o ${shortopts} -l ${longopts} -n ${scriptname} -- "$@" 2> /dev/null)
+
+unset MASTER_BRANCH_NAME
+unset REMOTE_NAME
+unset DRY_RUN
+
+while [ $# -ne 0 ]; do
+    case $1 in
+        -m | --master)
+            shift
+            MASTER_BRANCH_NAME="$1"
+            ;;
+        -h | --help)
+            usage
+            ;;
+        -r | --remote)
+            shift
+            REMOTE_NAME="$1"
+            ;;
+        -d | --dry-run)
+            DRY_RUN=1
+            ;;
+       --)
+            ;;
+        *)
+            usage
+            ;;
+    esac
+    shift
+done
+
+if [ "$FORCE" = True ]; then
+    echo "WARNING: You are running with -f, this is generally dangerous since the script may find and delete unintended folders! Use only in well-tested environments..."
+fi
+
+if [ -z "${MASTER_BRANCH_NAME}" ]; then
+    echo -e "ERROR: No master branch name specified. Please specify with --master.\n"
+    usage
+fi
+if [ -z "${REMOTE_NAME}" ]; then
+    echo -e "ERROR: No name of the remote specified. Please specify with --remote.\n"
+fi
+
+# Define cmd to dryrun or exectue the actual command
+cmd()
+{
+    if [[ ${DRY_RUN} -eq 1 ]]
+    then
+        echo "DRY_RUN: $@"
+    else
+        "$@"
+    fi
+}
+
+# Grep all branch names
+mapfile -t branch_name_array < <(git branch -vv --merged "${MASTER_BRANCH_NAME}" | grep -vP "\s*${MASTER_BRANCH_NAME}\s+" | grep "${REMOTE_NAME}" | grep -oP '^\s*\K[^\s]+')
+
+# Loop over branch names
+for branch in "${branch_name_array[@]}"; do
+    echo "Removing remote branch ${branch} from remote ${REMOTE_NAME}"
+    cmd git push -d "${REMOTE_NAME}" "${branch}"
+
+    echo "Removing local branch ${branch}"
+    cmd git branch -d "${branch}"
+done
+

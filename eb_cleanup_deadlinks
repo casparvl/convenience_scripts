@@ -1,0 +1,18 @@
+#!/bin/bash
+
+echo "Started script to remove dead links to removed modulefiles"
+echo "Obtaining local installation directory..."
+moduledir=$(eblocalinstall --show-config | grep "installpath-modules" | grep -o "/.*")
+echo "Local installation directory obtained: ${moduledir}"
+
+#echo "These were links that used to point from directories such as"
+#echo "${moduledir}/numlib/..."
+#echo "to"
+#echo " ${moduledir}/all/..."
+#echo "but where the modulefile in the latter directory now no longer exists."
+#echo "These dead links cause 'file not found' errors after an eblocalinstall."
+#echo "These errors don't cause problems, but are annoying"
+
+find ${moduledir} -xtype l -exec rm -v {} \;
+
+echo "Done!"
