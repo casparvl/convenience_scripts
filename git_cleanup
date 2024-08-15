@@ -20,7 +20,7 @@ usage() {
     -h,--help          Help message
 
 Example usage:
-    git_cleanup --remote origin
+    git_cleanup --master main --remote origin
     "
     exit 1;
 }
