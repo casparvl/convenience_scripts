@@ -15,8 +15,9 @@ usage() {
 
     -m,--master        Name of the master branch. The script will delete branches that have been merged to this branch.            (mandatory)
     -r,--remote        Name of the remote for which to cleanup the branches. The script will not touch branches on other remotes.  (mandatory)
-    NOTE: this SHOULD be your own remote, never someone elses! You don't want to remove branches from someone else...
     -d,--dry-run       Perform dry-run                                                                                             (optional)
+    -a,--also-remove-remote  Also remove the branch from the remote                                                                (optional)
+    NOTE: this should ONLY be set if the remote is your own, never someone elses! You don't want to remove branches from someone else...
     -h,--help          Help message
 
 Example usage:
@@ -25,14 +26,16 @@ Example usage:
     exit 1;
 }
 
-longopts="master:,remote:,dry-run,help"
-shortopts="m:,r:,d,h"
+longopts="master:,remote:,dry-run,also-remove-remote,help"
+shortopts="m:,r:,d,a,h"
 eval set -- $(getopt -o ${shortopts} -l ${longopts} -n ${scriptname} -- "$@" 2> /dev/null)
 
 unset MASTER_BRANCH_NAME
 unset REMOTE_NAME
 unset DRY_RUN
 
+# Default: don't remove from remote
+REMOVE_REMOTE=0
 while [ $# -ne 0 ]; do
     case $1 in
         -m | --master)
@@ -48,6 +51,9 @@ while [ $# -ne 0 ]; do
             ;;
         -d | --dry-run)
             DRY_RUN=1
+            ;;
+        -a | --also-remove-remote)
+            REMOVE_REMOTE=1
             ;;
        --)
             ;;
@@ -86,8 +92,10 @@ mapfile -t branch_name_array < <(git branch -vv --merged "${MASTER_BRANCH_NAME}"
 
 # Loop over branch names
 for branch in "${branch_name_array[@]}"; do
-    echo "Removing remote branch ${branch} from remote ${REMOTE_NAME}"
-    cmd git push -d "${REMOTE_NAME}" "${branch}"
+    if [ $REMOVE_REMOTE -eq 1 ]; then
+        echo "Removing remote branch ${branch} from remote ${REMOTE_NAME}"
+        cmd git push -d "${REMOTE_NAME}" "${branch}"
+    fi
 
     echo "Removing local branch ${branch}"
     cmd git branch -d "${branch}"
